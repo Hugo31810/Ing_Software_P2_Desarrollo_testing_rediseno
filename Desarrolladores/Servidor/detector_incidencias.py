@@ -49,7 +49,7 @@ class DetectorIncidencias:
         Recibe nuevos datos, predice y notifica si hay incidencia.
         """
         if not self.entrenado:
-            print("Error: Modelo no entrenado.")
+            print("Error:Modelo no entrenado.")
             return
 
         features = df_nuevos[['voltageReceiver1', 'voltageReceiver2', 'status']]

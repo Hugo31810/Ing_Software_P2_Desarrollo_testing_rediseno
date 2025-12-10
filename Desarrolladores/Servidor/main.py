@@ -5,7 +5,7 @@ from detector_incidencias import DetectorIncidencias
 
 
 def main():
-    print("=== INICIO DEL SISTEMA (ROL DESARROLLADOR) ===")
+    print("===INICIO DEL SISTEMA (ROL DESARROLLADOR)===")
 
     # 1. Instanciación y Carga
     archivo = "Dataset-CV.csv"

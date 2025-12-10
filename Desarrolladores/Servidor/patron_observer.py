@@ -9,7 +9,7 @@ class Listener(ABC):
 # Sujeto (Notificador)
 class NotificadorIncidencia:
     def __init__(self):
-        self._suscriptores = []
+        self._suscriptores =[]
 
     def add_subscriber(self, subscriber: Listener):
         self._suscriptores.append(subscriber)

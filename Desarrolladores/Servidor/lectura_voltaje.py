@@ -3,7 +3,7 @@ import pandas as pd
 
 class LecturaVoltaje:
     def __init__(self, ruta_csv):
-        self.ruta_csv = ruta_csv
+        self.ruta_csv= ruta_csv
 
     def leer_csv(self):
         """
