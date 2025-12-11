@@ -12,7 +12,7 @@ class DetectorIncidencias:
     def __init__(self):
         # Atributos UML
         self.ultimahora = None
-        self.frecuencia = 0
+        self.frecuencia=0
 
         # Componentes internos
         self.modelo = RandomForestClassifier(n_estimators=50, random_state=42)

@@ -7,7 +7,7 @@ from lectura_voltaje import lecturaVoltaje
 # --- CLASE UML: VisualizacionIncidencias ---
 class VisualizacionIncidencias:
     def __init__(self):
-        self.Incidencias = []
+        self.Incidencias=[]
         self.Voltajes = []
         self.Tiempos = []
 

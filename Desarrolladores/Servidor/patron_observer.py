@@ -10,7 +10,7 @@ class Listener(ABC):
 # --- SUJETO (NOTIFICADOR) ---
 class notificadorIncidencia:
     def __init__(self):
-        self.suscribers =[] # Atributo UML
+        self.suscribers=[] # Atributo UML
 
     def Addsuscriber(self, suscriber: Listener):
         self.suscribers.append(suscriber)

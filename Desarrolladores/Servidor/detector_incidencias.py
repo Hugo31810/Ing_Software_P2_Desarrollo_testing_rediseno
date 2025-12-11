@@ -9,7 +9,7 @@ class DetectorIncidencias:
     def __init__(self):
         self.modelo = RandomForestClassifier(n_estimators=50, random_state=42)
         self.notificador = NotificadorIncidencia()
-        self.entrenado = False
+        self.entrenado=False
 
     def _generar_etiquetas(self, df):
         """

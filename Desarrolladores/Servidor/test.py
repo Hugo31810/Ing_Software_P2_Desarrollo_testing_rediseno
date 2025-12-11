@@ -46,7 +46,7 @@ class TestSistemaFerroviario(unittest.TestCase):
 
     def test_logica_negocio_alertas(self):
         """ Prueba que detecta anomalías correctamente (Rol Tester) """
-        self.detector.entrenado = True  # Simulamos que está entrenado
+        self.detector.entrenado=True  # Simulamos que está entrenado
 
         # Caso 1: Valor Normal
         dato_normal = {'voltageReceiver1': 1700, 'voltageReceiver2': 1600, 'status': 1}

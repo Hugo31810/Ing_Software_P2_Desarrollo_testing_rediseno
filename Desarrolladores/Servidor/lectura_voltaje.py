@@ -30,7 +30,7 @@ class lecturaVoltaje:
                                       aggfunc='mean').reset_index()
 
             # Limpieza final
-            df_pivot.columns.name = None
+            df_pivot.columns.name=None
             return df_pivot.dropna()
 
         except FileNotFoundError:
