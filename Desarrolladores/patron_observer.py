@@ -1,34 +1,36 @@
 from abc import ABC, abstractmethod
+import datetime
 
-# Interfaz (Abstracta)
+# --- INTERFAZ LISTENER ---
 class Listener(ABC):
     @abstractmethod
-    def update(self, incidencia):
+    def Update(self, incidencia):
         pass
 
-# Sujeto (Notificador)
-class NotificadorIncidencia:
+# --- SUJETO (NOTIFICADOR) ---
+class notificadorIncidencia:
     def __init__(self):
-        self._suscriptores =[]
+        self.suscribers =[] # Atributo UML
 
-    def add_subscriber(self, subscriber: Listener):
-        self._suscriptores.append(subscriber)
+    def Addsuscriber(self, suscriber: Listener):
+        self.suscribers.append(suscriber)
 
-    def remove_subscriber(self, subscriber: Listener):
-        self._suscriptores.remove(subscriber)
+    def Removesuscriber(self, suscriber: Listener):
+        self.suscribers.remove(suscriber)
 
-    def notify_subscribers(self, incidencia):
-        for sub in self._suscriptores:
-            sub.update(incidencia)
+    def notifySuscribers(self, incidencia):
+        # En el diagrama se pasa la incidencia a los suscriptores
+        for sub in self.suscribers:
+            sub.Update(incidencia)
 
-# Implementación Concreta: Suscriptor Ausencia
-class SuscriptorAusenciaDatos(Listener):
-    def update(self, incidencia):
+# --- SUSCRIPTORES CONCRETOS ---
+class suscriptorAusenciaDatos(Listener):
+    def Update(self, incidencia):
         if incidencia['tipo'] == 'AusenciaDatos':
-            print(f"   [ALERTA] 🔴 Ausencia de datos en {incidencia['hora']}. V1: {incidencia['v1']}")
+            print(f"   [SERVIDOR LOG] 🔴 ALERTA CRÍTICA: Ausencia de Datos detectada.")
 
-# Implementación Concreta: Suscriptor Salto
-class SuscriptorSaltoVoltaje(Listener):
-    def update(self, incidencia):
+class suscriptorSaltoVoltaje(Listener):
+    def Update(self, incidencia):
         if incidencia['tipo'] == 'SaltoVoltaje':
-            print(f"   [ALERTA] ⚡ Salto de Tensión detectado en {incidencia['hora']}. V1: {incidencia['v1']}")
+            val = incidencia.get('valor', 0)
+            print(f"   [SERVIDOR LOG] ⚡ ALERTA: Salto de Voltaje ({val}V).")
