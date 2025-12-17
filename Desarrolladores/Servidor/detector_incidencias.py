@@ -2,13 +2,13 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from patron_observer import NotificadorIncidencia
+from patron_observer import notificadorIncidencia
 
 
 class DetectorIncidencias:
     def __init__(self):
         self.modelo = RandomForestClassifier(n_estimators=50, random_state=42)
-        self.notificador = NotificadorIncidencia()
+        self.notificador = notificadorIncidencia()
         self.entrenado=False
 
     def _generar_etiquetas(self, df):
