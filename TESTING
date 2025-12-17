@@ -2,3 +2,5 @@
 2- Cambiar en detector_de_incidencias.py todas las variables "NotificadorIncidencia" por "notificadorIncidencia"
 3- Cambiar en lectura_voltaje.py, linea 45,  "return estadoVoltaje == 1" por "return estadoVoltaje == 0"
 4- Comprobar porque no detecta la IA las incidencias (bucle de prueba en cliente.py)
+   No lo detecta porque el csv de entrenamiento no contiene fallos, hay que inyesar fallos para que los aprenda e identifique
+
