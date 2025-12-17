@@ -1,124 +1,132 @@
-# Práctica 2 – Desarrollo, testing y rediseño  
-**Ingeniería del Software – Universidad Rey Juan Carlos**
+# Railway Incidence Management System – Development, Testing & Redesign
 
-Este repositorio contiene el desarrollo de la **Práctica 2 de la asignatura Ingeniería del Software**, correspondiente al curso académico **2025–2026**, centrada en el **desarrollo en Python**, el **testing del sistema** y el **rediseño parcial** del modelo cuando ha sido necesario, partiendo de los requisitos y el diseño definidos en la Práctica 1.
+Este repositorio contiene la **fase de desarrollo, testing y rediseño** del *Railway Incidence Management System*, una aplicación software orientada a la **detección y predicción de incidencias en infraestructuras ferroviarias**.
+
+El proyecto parte de los **requisitos y el diseño UML definidos en la fase previa** y se centra en su **implementación en Python**, la validación mediante **testing sistemático** y la **evolución del diseño** cuando ha sido necesario.
 
 ---
 
-## 📌 Objetivo de la práctica
+## 🎯 Objetivo del proyecto
 
-El objetivo de esta práctica es **implementar el sistema diseñado en la Práctica 1**, realizando:
+Los objetivos principales de esta fase son:
 
-- Desarrollo del sistema en **Python**
-- Aplicación de **técnicas de testing**
-- Uso de **Machine Learning** para la predicción de incidencias
-- **Rediseño parcial** del diagrama de clases y paquetes en caso necesario
+- Implementar el sistema diseñado en la fase de requisitos y diseño
+- Desarrollar una solución funcional en **Python**
+- Aplicar **técnicas de testing** para garantizar la calidad del código
+- Utilizar **Machine Learning** para la predicción de incidencias
+- Realizar un **rediseño parcial** del sistema si el desarrollo lo requiere
+- Justificar técnica y arquitectónicamente los cambios realizados
 
-Todo ello siguiendo el enunciado oficial de la Práctica 2 proporcionado por la asignatura :contentReference[oaicite:0]{index=0}.
+Este repositorio corresponde a la **fase de implementación y validación** del sistema.
 
 ---
 
 ## 🧩 Contexto del sistema
 
-El sistema implementado corresponde a una **aplicación para la detección y predicción de incidencias en vías ferroviarias**, basada en datos eléctricos almacenados en ficheros CSV.
+El sistema procesa datos eléctricos procedentes de **dispositivos situados en vías ferroviarias**, almacenados en ficheros CSV.
 
-Los datos incluyen:
-- Estado de la vía (`status` / `medida`):
-  - `1`: no hay tren
-  - `0`: hay tren
-- Valores de voltaje procedentes de dos receptores:
-  - `voltageReceiver1` (canal a)
-  - `voltageReceiver2` (canal b)
-- Información temporal asociada a cada medición
+Cada registro contiene:
+- Estado de la vía (`status`):
+  - `1`: vía libre
+  - `0`: vía ocupada por un tren
+- Valores de voltaje de dos receptores:
+  - `voltageReceiver1` (canal A)
+  - `voltageReceiver2` (canal B)
+- Marca temporal asociada a la medición
+
+A partir de estos datos, el sistema detecta y predice incidencias relevantes para la operación ferroviaria.
 
 ---
 
 ## 👥 Equipo y roles
 
-Los roles del equipo han sido reasignados conforme a lo establecido en la Práctica 2:
+Los roles del equipo se han asignado conforme a la definición de esta fase del proyecto:
 
-### 🧑‍💻 Desarrolladores
-(Arquitectos de la P1 + un analista)
+### 🧑‍💻 Developers
 - **Pablo Sastre Noriega**
 - **Héctor Santiago Martínez**
 
-
 ### 🧪 Tester
-(Jefe de proyecto de la P1)
 - **Hugo Salvador Aizpún**
-- - **Iván De Rada López**
-
-### 🏗️ Arquitecto Software
-(Otro analista de la P1, con apoyo en testing)
+- **Iván De Rada López**
+- 
+### 🏗️ Software Architect
 - **Raúl Vicente Sánchez**
 
-### 👤 Apoyo en análisis y validación
+### 👤 Support & Validation
 - **Tomás Cano Santa Catalina**
 
-Cada miembro ha asumido las responsabilidades indicadas para garantizar la calidad del desarrollo, las pruebas y la correcta evolución del diseño.
+Cada rol ha contribuido al desarrollo, validación y evolución del sistema para asegurar su calidad y coherencia arquitectónica.
 
 ---
 
-## 🧠 Algoritmo de Machine Learning
+## 🧠 Predicción de incidencias (Machine Learning)
 
-Para la predicción de incidencias se ha seleccionado un **algoritmo de Machine Learning** adecuado al tipo de datos disponibles.
+El sistema incorpora un módulo de **Machine Learning** para la predicción de incidencias, basado en:
 
-Características del proceso:
+- Selección del algoritmo más adecuado al problema
 - División del dataset:
-  - 80% para entrenamiento
-  - 20% para predicción
-- Predicción de:
-  - Ausencia prolongada de datos
-  - Saltos de voltaje ≥ 0.5 V
-- Evaluación del rendimiento del modelo durante la fase de testing
+  - 80% entrenamiento
+  - 20% predicción
+- Evaluación del rendimiento durante la fase de testing
+
+El modelo se integra como parte del flujo principal del sistema.
 
 ---
 
 ## 🧪 Testing
 
-El sistema ha sido sometido a un proceso de **testing sistemático**, que incluye:
+Se ha llevado a cabo un proceso de **testing estructurado**, que incluye:
 
 - Tests unitarios de los principales módulos
-- Verificación de la correcta lectura del dataset
-- Validación de los resultados del modelo de predicción
-- Detección de errores y fallos lógicos
+- Validación de la lectura y adaptación del dataset
+- Comprobación del correcto funcionamiento del sistema de predicción
+- Detección y corrección de errores lógicos y estructurales
 
-Los fallos detectados y las soluciones aplicadas se documentan tanto en el código como en la presentación final.
+Los problemas detectados y sus soluciones se documentan tanto en el código como en la presentación final del proyecto.
 
 ---
 
 ## 🔄 Rediseño
 
-Durante el desarrollo se ha evaluado la necesidad de realizar un **rediseño parcial del diagrama de clases y paquetes**.
+Durante el desarrollo se ha evaluado de forma continua la adecuación del diseño original.
 
-El rediseño se ha llevado a cabo únicamente cuando ha sido imprescindible, documentando:
-- Problema detectado
-- Cambios realizados
-- Justificación del rediseño
+Cuando ha sido necesario, se ha realizado un **rediseño parcial**, documentando:
+
+- Limitaciones del diseño inicial
+- Cambios aplicados
+- Justificación técnica y arquitectónica
+- Impacto del rediseño en el sistema final
+
 
 ---
 
 ## 📄 Entregables
 
-La práctica incluye los siguientes entregables:
+El proyecto incluye:
 
 - Código fuente completo en Python
 - Tests automatizados
-- Dataset adaptado
-- Presentación en PowerPoint con:
-  - Explicación del desarrollo
-  - Resultados del testing
+- Dataset adaptado al problema
+- Presentación con:
+  - Arquitectura final
+  - Fallos detectados durante el testing
+  - Soluciones aplicadas
   - Rediseño realizado
-  - Librerías utilizadas
-  - Decisiones técnicas relevantes
-
-
+  - Librerías y decisiones técnicas
 
 ---
 
-## ✍️ Autores
+## 📌 Relación con otros repositorios
 
-Práctica realizada por el **Grupo G6**  
-Asignatura: Ingeniería del Software  
-Universidad Rey Juan Carlos  
-Curso 2025–2026
+- **Fase de análisis y diseño:**  
+  `railway-incidence-management-system-requirements-and-design`
+
+Este repositorio constituye la **continuación natural** del proyecto.
+
+---
+
+## ✍️ Autoría
+
+Proyecto desarrollado en el marco de la asignatura **Ingeniería del Software**  
+Universidad Rey Juan Carlos – Curso 2025–2026
