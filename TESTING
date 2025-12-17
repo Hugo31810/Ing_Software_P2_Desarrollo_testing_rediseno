@@ -4,3 +4,5 @@
 4- Comprobar porque no detecta la IA las incidencias (bucle de prueba en cliente.py)
    No lo detecta porque el csv de entrenamiento no contiene fallos, hay que introducir fallos para que los aprenda e identifique
 
+5- Al ejercutar uno de los test se identifica una incoherencia status = 0 -> si que hya tren, stattus = 1 -> no hay tren -> lo cambiamos en lectura_voltaje.py
+

@@ -42,4 +42,4 @@ class lecturaVoltaje:
 
     def detectarTren(self, estadoVoltaje):
         """ Operación UML """
-        return estadoVoltaje == 1
+        return estadoVoltaje == 0
