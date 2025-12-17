@@ -170,3 +170,4 @@ def test_suscriptor_no_reacciona_a_otro_tipo(capsys):
     salida = capsys.readouterr().out
 
     assert salida == ""
+
