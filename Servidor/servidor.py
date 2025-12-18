@@ -8,50 +8,33 @@ from patron_observer import notificadorIncidencia, suscriptorAusenciaDatos, susc
 #resolver primer problema
 from detector_incidencias import DetectorIncidencias
 
-# --- CLASE UML: DetectroIncidencias (Cerebro del sistema) --- (borrada de momento a ver si funciona, si no la tengo guardada)
 
-        # Preparamos el dato para la IA (DataFrame de 1 fila)
-        df_input = pd.DataFrame([datos_json])
+def entrenar_sistema_interno(self):
+    """ Método auxiliar para cumplir el requisito de P2 (Training) """
+    lector = lecturaVoltaje()
+    df = lector.leerCSV(r".\Dataset-CV.csv")
 
-        # PREDICCIÓN ML
-        prediccion = self.modelo.predict(df_input[['voltageReceiver1', 'voltageReceiver2', 'status']])[0]
+    if df is None: return False
 
-        # Si la predicción no es Normal, usamos el Patrón Observer
-        if prediccion != 'Normal':
-            incidencia = {
-                'tipo': prediccion,
-                'valor': datos_json['voltageReceiver1']
-            }
-            self.notificador.notifySuscribers(incidencia)
+    print("--> [Servidor] Generando etiquetas de entrenamiento...")
+    # Generar etiquetas artificiales (Training Labeling)
+    df['target'] = np.select(
+        [(df['voltageReceiver1'] < 50), (df['voltageReceiver1'] > 2000)],
+        ['AusenciaDatos', 'SaltoVoltaje'],
+        default='Normal'
+    )
 
-        return prediccion
+    X = df[['voltageReceiver1', 'voltageReceiver2', 'status']]
+    y = df['target']
 
-    def entrenar_sistema_interno(self):
-        """ Método auxiliar para cumplir el requisito de P2 (Training) """
-        lector = lecturaVoltaje()
-        df = lector.leerCSV(r".\Dataset-CV.csv")
+    # Split 80/20 Requerido
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
-        if df is None: return False
-
-        print("--> [Servidor] Generando etiquetas de entrenamiento...")
-        # Generar etiquetas artificiales (Training Labeling)
-        df['target'] = np.select(
-            [(df['voltageReceiver1'] < 50), (df['voltageReceiver1'] > 2000)],
-            ['AusenciaDatos', 'SaltoVoltaje'],
-            default='Normal'
-        )
-
-        X = df[['voltageReceiver1', 'voltageReceiver2', 'status']]
-        y = df['target']
-
-        # Split 80/20 Requerido
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
-
-        print("--> [Servidor] Entrenando Random Forest...")
-        self.modelo.fit(X_train, y_train)
-        self.entrenado = True
-        print("--> [Servidor] IA Entrenada y Lista.")
-        return True
+    print("--> [Servidor] Entrenando Random Forest...")
+    self.modelo.fit(X_train, y_train)
+    self.entrenado = True
+    print("--> [Servidor] IA Entrenada y Lista.")
+    return True
 
 
 # --- FLASK (Infraestructura HTTP) ---
