@@ -45,16 +45,15 @@ Los roles del equipo se han asignado conforme a la definición de esta fase del 
 ### 🧑‍💻 Developers
 - **Pablo Sastre Noriega**
 - **Héctor Santiago Martínez**
+- **Raúl Vicente Sánchez**
+- **Tomás Cano Santa Catalina**
 
 ### 🧪 Tester
 - **Hugo Salvador Aizpún**
 - **Iván De Rada López**
 
 ### 🏗️ Software Architect
-- **Raúl Vicente Sánchez**
-
-### 👤 Support & Validation
-- **Tomás Cano Santa Catalina**
+- **Iván De Rada López**
 
 Cada rol ha contribuido al desarrollo, validación y evolución del sistema para asegurar su calidad y coherencia arquitectónica.
 
