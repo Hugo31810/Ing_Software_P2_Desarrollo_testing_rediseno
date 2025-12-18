@@ -4,62 +4,62 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from Servidor.patron_observer import notificadorIncidencia
 
-
 class DetectorIncidencias:
     def __init__(self):
         self.modelo = RandomForestClassifier(n_estimators=50, random_state=42)
         self.notificador = notificadorIncidencia()
-        self.entrenado=False
+        self.entrenado = False
+
+    def _preprocesar(self, df):
+        """Calcula diferencias temporales y de voltaje por dispositivo."""
+        # Ordenar por dispositivo y tiempo para calcular diferencias reales
+        sort_cols = ['dispositivo_id', 'tiempo'] if 'dispositivo_id' in df.columns else ['tiempo']
+        df = df.sort_values(by=sort_cols)
+
+        # Delta de tiempo y voltaje respecto a la fila anterior
+        if 'dispositivo_id' in df.columns:
+            df['diff_t'] = df.groupby('dispositivo_id')['tiempo'].diff().fillna(0)
+            df['diff_v'] = df.groupby('dispositivo_id')['voltageReceiver1'].diff().abs().fillna(0)
+        else:
+            df['diff_t'] = df['tiempo'].diff().fillna(0)
+            df['diff_v'] = df['voltageReceiver1'].diff().abs().fillna(0)
+        return df
 
     def _generar_etiquetas(self, df):
-        """
-        Método auxiliar para crear el 'Target' del entrenamiento.
-        Define reglas heurísticas para enseñar a la IA qué es un fallo.
-        """
+        """Define las nuevas reglas de incidencia para el entrenamiento."""
         condiciones = [
-            (df['voltageReceiver1'] < 50),  # Regla: Voltaje muy bajo = Ausencia
-            (df['voltageReceiver1'] > 2000)  # Regla: Voltaje muy alto = Salto
+            (df['diff_t'] > 120),    # Incidencia tipo (i): Salto temporal
+            (df['diff_v'] >= 0.5)    # Salto de voltaje >= 0.5V
         ]
-        etiquetas = ['AusenciaDatos', 'SaltoVoltaje']
-
-        # Crea columna 'target'. Si no es fallo, es 'Normal'
+        etiquetas = ['IncidenciaTiempo', 'SaltoVoltaje']
         df['target'] = np.select(condiciones, etiquetas, default='Normal')
         return df
 
     def entrenar(self, df_datos):
-        # 1. Preparamos los datos
-        df_etiquetado = self._generar_etiquetas(df_datos.copy())
+        df = self._preprocesar(df_datos.copy())
+        df = self._generar_etiquetas(df)
 
-        X = df_etiquetado[['voltageReceiver1', 'voltageReceiver2', 'status']]
-        y = df_etiquetado['target']
+        # Entrenamos con las diferencias (deltas) para que la IA detecte los saltos
+        X = df[['voltageReceiver1', 'voltageReceiver2', 'status', 'diff_t', 'diff_v']]
+        y = df['target']
 
-        # 2. Split 80% Train / 20% Test (Requerimiento estricto)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
-
-        # 3. Entrenamiento
-        print("--> [Desarrollo] Entrenando modelo Random Forest...")
+        
+        print("--> [Desarrollo] Entrenando modelo con reglas de saltos (0.5V / 120s)...")
         self.modelo.fit(X_train, y_train)
         self.entrenado = True
-
-        # Devolvemos el set de prueba (con índices originales) para simular la ejecución
-        return df_etiquetado.loc[X_test.index]
+        return df.loc[X_test.index]
 
     def ejecutar_analisis(self, df_nuevos):
-        """
-        Recibe nuevos datos, predice y notifica si hay incidencia.
-        """
         if not self.entrenado:
-            print("Error:Modelo no entrenado.")
+            print("Error: Modelo no entrenado.")
             return
 
-        features = df_nuevos[['voltageReceiver1', 'voltageReceiver2', 'status']]
+        df = self._preprocesar(df_nuevos.copy())
+        features = df[['voltageReceiver1', 'voltageReceiver2', 'status', 'diff_t', 'diff_v']]
         predicciones = self.modelo.predict(features)
 
-        # Convertimos a arrays para acceso rápido
-        tiempos = df_nuevos['tiempo'].values
-        v1 = df_nuevos['voltageReceiver1'].values
-
-        print(f"--> [Desarrollo] Analizando {len(df_nuevos)} registros en tiempo real...")
+        print(f"--> [Desarrollo] Analizando {len(df)} registros...")
 
         incidentes_count = 0
         for i, pred in enumerate(predicciones):
@@ -67,9 +67,10 @@ class DetectorIncidencias:
                 incidentes_count += 1
                 incidencia = {
                     'tipo': pred,
-                    'hora': tiempos[i],
-                    'v1': v1[i]
+                    'hora': df['tiempo'].iloc[i],
+                    'v1': df['voltageReceiver1'].iloc[i]
                 }
+                # Mantenemos el nombre sin guion bajo para tus tests
                 self.notificador.notifySuscribers(incidencia)
 
         print(f"--> [Desarrollo] Análisis finalizado. Incidentes detectados: {incidentes_count}")
