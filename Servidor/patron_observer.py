@@ -18,7 +18,7 @@ class notificadorIncidencia:
     def Removesuscriber(self, suscriber: Listener):
         self.suscribers.remove(suscriber)
 
-    def notify_suscribers(self, incidencia):
+    def notifySuscribers(self, incidencia):
         # En el diagrama se pasa la incidencia a los suscriptores
         for sub in self.suscribers:
             sub.Update(incidencia)
