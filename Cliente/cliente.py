@@ -44,7 +44,7 @@ def main():
 
     # 1. Cargar datos para simular los sensores del tren
     lector = lecturaVoltaje()
-    datos_totales = lector.leerCSV(r"C:\Users\rv710\3_IA\Ingenieria_Software\Ing_Software_P2\Dataset-CV.csv")
+    datos_totales = lector.leerCSV(r".\Dataset-CV.csv")
 
     # Tomamos una muestra de 100 datos para la demo
     datos_simulacion = datos_totales.sort_values('tiempo')
