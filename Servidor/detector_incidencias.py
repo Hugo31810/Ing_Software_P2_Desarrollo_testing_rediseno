@@ -2,8 +2,11 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from patron_observer import notificadorIncidencia
 from datetime import datetime
+try:
+    from patron_observer import notificadorIncidencia
+except ImportError:
+    from Servidor.patron_observer import notificadorIncidencia
 
 
 class DetectorIncidencias:
