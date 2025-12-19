@@ -1,79 +1,109 @@
-import numpy as np
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from Servidor.patron_observer import notificadorIncidencia
+from patron_observer import notificadorIncidencia
+from datetime import datetime
 
 
 class DetectorIncidencias:
     def __init__(self):
-        self.modelo = RandomForestClassifier(n_estimators=50, random_state=42)
+        self.modelo = RandomForestClassifier(n_estimators=100, random_state=42)
         self.notificador = notificadorIncidencia()
-        self.entrenado=False
+        self.entrenado = False
+
+        # MEMORIA para streaming (Dato a dato)
+        self.ultimo_tiempo = None
+        self.ultimo_v1 = None
+        self.ultimo_v2 = None
 
     def _generar_etiquetas(self, df):
-        """
-        Método auxiliar para crear el 'Target' del entrenamiento.
-        Define reglas heurísticas para enseñar a la IA qué es un fallo.
-        """
-        condiciones = [
-            (df['voltageReceiver1'] < 50),  # Regla: Voltaje muy bajo = Ausencia
-            (df['voltageReceiver1'] > 2000),  # Regla: Voltaje muy alto = Salto
-            #(df['voltageReceiver2'] < 50),
-            #(df['voltageReceiver2'] > 2000)
-        ]
-        etiquetas = ['AusenciaDatos', 'SaltoVoltaje']
+        try:
+            df['tiempo'] = pd.to_datetime(df['tiempo'], dayfirst=True)
+        except:
+            # Plan B: Si falla, forzamos el formato exacto del CSV
+            df['tiempo'] = pd.to_datetime(df['tiempo'], format="%d/%m/%Y %H:%M")
 
-        # Crea columna 'target'. Si no es fallo, es 'Normal'
-        df['target'] = np.select(condiciones, etiquetas, default='Normal')
+        df = df.sort_values('tiempo')
+
+        # Calculamos diferencias (Deltas)
+        df['delta_v1'] = df['voltageReceiver1'].diff().abs().fillna(0)
+        df['delta_v2'] = df['voltageReceiver2'].diff().abs().fillna(0)
+        df['delta_tiempo'] = df['tiempo'].diff().dt.total_seconds().fillna(0)
+
+        # Reglas: Ausencia (>120s) O Salto (>500mV en cualquiera de los dos)
+        cond_ausencia = df['delta_tiempo'] > 120
+        cond_salto = (df['delta_v1'] > 500) | (df['delta_v2'] > 500)
+
+        df['target'] = np.select(
+            [cond_ausencia, cond_salto],
+            ['AusenciaDatos', 'SaltoVoltaje'],
+            default='Normal'
+        )
         return df
 
     def entrenar(self, df_datos):
-        # 1. Preparamos los datos
+        print("--> [Detector] Generando etiquetas y entrenando...")
         df_etiquetado = self._generar_etiquetas(df_datos.copy())
 
-        X = df_etiquetado[['voltageReceiver1', 'voltageReceiver2', 'status']]
+        features = ['voltageReceiver1', 'voltageReceiver2', 'status',
+                    'delta_v1', 'delta_v2', 'delta_tiempo']
+
+        X = df_etiquetado[features]
         y = df_etiquetado['target']
 
-        # 2. Split 80% Train / 20% Test (Requerimiento estricto)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
 
-        # 3. Entrenamiento
-        print("--> [Desarrollo] Entrenando modelo Random Forest...")
         self.modelo.fit(X_train, y_train)
         self.entrenado = True
+        print(f"--> [Detector] Modelo entrenado. Score: {self.modelo.score(X_test, y_test):.2f}")
 
-        # Devolvemos el set de prueba (con índices originales) para simular la ejecución
         return df_etiquetado.loc[X_test.index]
 
-    def ejecutar_analisis(self, df_nuevos):
-        """
-        Recibe nuevos datos, predice y notifica si hay incidencia.
-        """
+    def analizar_dato_api(self, datos_json):
         if not self.entrenado:
-            print("Error:Modelo no entrenado.")
-            return
+            return "Servidor No Entrenado"
 
-        features = df_nuevos[['voltageReceiver1', 'voltageReceiver2', 'status']]
-        predicciones = self.modelo.predict(features)
+        v1 = datos_json['voltageReceiver1']
+        v2 = datos_json['voltageReceiver2']
 
-        # Convertimos a arrays para acceso rápido
-        tiempos = df_nuevos['tiempo'].values
-        v1 = df_nuevos['voltageReceiver1'].values
-        #v2 = df_nuevos['voltageReceiver2'].values
+        # Convertimos el texto del JSON a fecha real para hacer la resta
+        try:
+            # Aquí también aplicamos dayfirst por seguridad
+            tiempo_actual = pd.to_datetime(datos_json['tiempo'], dayfirst=True)
+        except:
+            tiempo_actual = datetime.now()
 
-        print(f"--> [Desarrollo] Analizando {len(df_nuevos)} registros en tiempo real...")
+        # Usamos la memoria para calcular el salto
+        if self.ultimo_tiempo is None:
+            d_v1, d_v2, d_tiempo = 0, 0, 0
+        else:
+            d_v1 = abs(v1 - self.ultimo_v1)
+            d_v2 = abs(v2 - self.ultimo_v2)
+            d_tiempo = (tiempo_actual - self.ultimo_tiempo).total_seconds()
 
-        incidentes_count = 0
-        for i, pred in enumerate(predicciones):
-            if pred != 'Normal':
-                incidentes_count += 1
-                incidencia = {
-                    'tipo': pred,
-                    'hora': tiempos[i],
-                    'v1': v1[i],
-                    #'v2': v2[i]
-                }
-                self.notificador.notifySuscribers(incidencia)
+        # Actualizamos la memoria
+        self.ultimo_v1 = v1
+        self.ultimo_v2 = v2
+        self.ultimo_tiempo = tiempo_actual
 
-        print(f"--> [Desarrollo] Análisis finalizado. Incidentes detectados: {incidentes_count}")
+        # Preparamos los datos para la IA
+        input_data = pd.DataFrame([{
+            'voltageReceiver1': v1,
+            'voltageReceiver2': v2,
+            'status': datos_json['status'],
+            'delta_v1': d_v1,
+            'delta_v2': d_v2,
+            'delta_tiempo': d_tiempo
+        }])
+
+        prediccion = self.modelo.predict(input_data)[0]
+
+        if prediccion != 'Normal':
+            self.notificador.notifySuscribers({
+                'tipo': prediccion,
+                'hora': str(tiempo_actual),
+                'v1': v1, 'v2': v2
+            })
+
+        return prediccion

@@ -11,33 +11,40 @@ class lecturaVoltaje:
         self.hora = None
         self.idDispositivo = 0
 
-    def leerCSV(self, ruta_csv):
-        """
-        Operación UML: leerCSV
-        Realiza la ETL: Lee el CSV crudo, pivota la tabla y limpia nulos.
-        """
+    def leerCSV(self, ruta_archivo):
         try:
-            # Lectura con separador de punto y coma
-            df = pd.read_csv(ruta_csv, sep=';')
+            # 1. Leemos el CSV (tiempo, medida, valor)
+            df = pd.read_csv(ruta_archivo, sep=';')
 
-            # Conversión de fecha
-            df['tiempo'] = pd.to_datetime(df['tiempo'], format='%d/%m/%Y %H:%M')
-
-            # PIVOTING: Transformación necesaria para tu dataset específico
-            df_pivot = df.pivot_table(index=['tiempo', 'id'],
+            # 2. Pivotamos usando SOLO 'tiempo' como índice
+            df_pivot = df.pivot_table(index='tiempo',
                                       columns='medida',
-                                      values='valor',
-                                      aggfunc='mean').reset_index()
+                                      values='valor').reset_index()
 
-            # Limpieza final
-            df_pivot.columns.name=None
+            # 3. Limpiamos el nombre de las columnas (quita el nombre 'medida')
+            df_pivot.columns.name = None
+
+            # 4. Aseguramos que existan todas las columnas necesarias
+            columnas_necesarias = ['voltageReceiver1', 'voltageReceiver2', 'status']
+
+            for col in columnas_necesarias:
+                if col not in df_pivot.columns:
+                    df_pivot[col] = 0  # Rellenar con 0 si falta
+
+            # Convertimos 'status' a enteros
+            df_pivot['status'] = df_pivot['status'].fillna(0).astype(int)
+
             return df_pivot.dropna()
 
         except FileNotFoundError:
-            print(f"Error: No se encuentra el archivo {ruta_csv}")
+            print(f"Error: No se encuentra el archivo en: {ruta_archivo}")
+            return None
+        except KeyError as e:
+            # Este es el error que te salía antes, ahora debería arreglarse
+            print(f"Error de estructura en CSV: Falta la columna {e}")
             return None
         except Exception as e:
-            print(f"Error procesando CSV: {e}")
+            print(f"Error leyendo CSV: {e}")
             return None
 
     def detectarTren(self, estadoVoltaje):

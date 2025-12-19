@@ -109,7 +109,7 @@ def test_ejecutar_analisis_sin_entrenar():
         'tiempo': [1]
     })
 
-    resultado = detector.ejecutar_analisis(df)
+    resultado = detector.analizar_dato_api(df)
 
     assert resultado is None
 

@@ -3,100 +3,85 @@ import os
 import requests
 import matplotlib.pyplot as plt
 
-# --- BLOQUE DE CONFIGURACIÓN DE RUTAS (LA SOLUCIÓN) ---
-# 1. Obtenemos la ruta de la carpeta donde está este script (carpeta 'Cliente')
+# Configuración de rutas para importar librerías hermanas y encontrar el CSV
 directorio_actual = os.path.dirname(os.path.abspath(__file__))
-
-# 2. Obtenemos la ruta de la raíz del proyecto (una carpeta atrás)
 directorio_raiz = os.path.dirname(directorio_actual)
-
-# 3. Añadimos la carpeta 'Servidor' al sistema para poder importar 'lectura_voltaje'
-#    aunque esté en otra carpeta.
 ruta_servidor = os.path.join(directorio_raiz, 'Servidor')
-sys.path.append(ruta_servidor)
-
-# 4. Definimos la ruta universal al CSV (que está en la raíz)
 ruta_csv = os.path.join(directorio_raiz, "Dataset-CV.csv")
-# -----------------------------------------------------
 
-# Ahora sí podemos importar el módulo de la otra carpeta
+sys.path.append(ruta_servidor)
 from lectura_voltaje import lecturaVoltaje
 
-# --- CLASE UML: VisualizacionIncidencias ---
+
 class VisualizacionIncidencias:
     def __init__(self):
-        self.Incidencias=[]
+        self.Incidencias = []
         self.Voltajes = []
         self.Tiempos = []
 
     def Visualizador(self):
-        """ Operación UML: Pinta los resultados acumulados """
         if not self.Voltajes:
             print("No hay datos para visualizar.")
             return
 
         plt.figure(figsize=(10, 6))
         plt.plot(self.Tiempos, self.Voltajes, label='Voltaje R1', color='blue', alpha=0.6)
-
-        # Pintar incidencias detectadas como puntos rojos
+        # Dibujamos incidencias
         for inc in self.Incidencias:
-            plt.scatter(inc['t'], inc['v'], color='red', s=50, label='Incidencia', zorder=5)
+            plt.scatter(inc['t'], inc['v'], color='red', s=50, zorder=5)
 
-        # Truco para evitar duplicar labels en la leyenda
-        handles, labels = plt.gca().get_legend_handles_labels()
-        by_label = dict(zip(labels, handles))
-        plt.legend(by_label.values(), by_label.keys())
-
-        plt.title("Cliente: Monitorización de Vía (Respuesta del Servidor)")
+        plt.title("Monitorización Cliente")
         plt.xlabel("Muestras")
-        plt.ylabel("Voltaje (V)")
+        plt.ylabel("Milivoltios (mV)")
         plt.grid(True)
-        print("--> [Cliente] Abriendo gráfico...")
+        print("--> [Cliente] Mostrando gráfico...")
         plt.show()
 
 
-# --- SIMULACIÓN DEL CLIENTE ---
 def main():
     print("=== CLIENTE INICIADO ===")
     url = "http://127.0.0.1:5000/analizar"
 
-    # 1. Cargar datos para simular los sensores del tren
+    print(f"--> Leyendo datos para simulación: {ruta_csv}")
     lector = lecturaVoltaje()
     datos_totales = lector.leerCSV(ruta_csv)
 
-    # Tomamos una muestra de 100 datos para la demo
+    if datos_totales is None:
+        print("❌ Error: No se encuentra el CSV.")
+        return
+
+    # Ordenamos por tiempo para simular correctamente
     datos_simulacion = datos_totales.sort_values('tiempo')
     gui = VisualizacionIncidencias()
 
-    print(f"--> Enviando {len(datos_simulacion)} lecturas al servidor...")
+    print(f"--> Enviando {len(datos_simulacion)} lecturas...")
 
     for index, row in datos_simulacion.iterrows():
-        # Paquete de datos (simula lectura de sensor)
         payload = {
             "voltageReceiver1": row['voltageReceiver1'],
             "voltageReceiver2": row['voltageReceiver2'],
-            "status": row['status']
+            "status": row['status'],
+            #Convertimos a texto para enviarlo por JSON
+            "tiempo": str(row['tiempo'])
         }
 
         try:
-            # ENVIAR POR HTTP (REST)
             respuesta = requests.post(url, json=payload)
             diagnostico = respuesta.json().get('diagnostico')
 
-            print(f"Enviado: {payload['voltageReceiver1']}mV | Diagnóstico Servidor: {diagnostico}")
+            print(f"Enviado: {payload['voltageReceiver1']}mV | Diagnóstico: {diagnostico}")
 
-            # Guardar para el gráfico
+            # Guardamos para la gráfica (solo los primeros 100 para no saturar memoria si son muchos)
             gui.Voltajes.append(row['voltageReceiver1'])
-            gui.Tiempos.append(str(row['tiempo']))
+            gui.Tiempos.append(str(index))  # Usamos índice como tiempo simple para eje X
 
             if diagnostico != 'Normal':
-                gui.Incidencias.append({'t': str(row['tiempo']), 'v': row['voltageReceiver1']})
+                gui.Incidencias.append({'t': str(index), 'v': row['voltageReceiver1']})
 
-        except:
-            print("Error: El servidor no responde. ¿Ejecutaste servidor.py?")
+        except Exception as e:
+            print(f"❌ ERROR CONEXIÓN: {e}")
             break
 
-    # 2. Visualizar al terminar
     gui.Visualizador()
 
 
