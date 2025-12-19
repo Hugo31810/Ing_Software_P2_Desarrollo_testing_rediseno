@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-
 from Servidor.lectura_voltaje import lecturaVoltaje
 from Servidor.detector_incidencias import DetectorIncidencias
 from Servidor.patron_observer import (
