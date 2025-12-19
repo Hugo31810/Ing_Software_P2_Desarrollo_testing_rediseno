@@ -56,31 +56,53 @@ def test_lectura_csv_archivo_inexistente():
 def test_generar_etiquetas_crea_target():
     detector = DetectorIncidencias()
 
+    # CORRECCIÓN: Añadimos la columna 'tiempo' obligatoria
     df = pd.DataFrame({
-        'voltageReceiver1': [10, 1700, 3000],
-        'voltageReceiver2': [100, 100, 100],
-        'status': [0, 0, 0]
+        'tiempo': ['01/01/2025 10:00:00', '01/01/2025 10:01:00'],
+        'voltageReceiver1': [1000, 1000],
+        'voltageReceiver2': [1000, 1000],
+        'status': [0, 0]
     })
 
     df_et = detector._generar_etiquetas(df)
 
     assert 'target' in df_et.columns
+    assert len(df_et) == 2
 
 
 def test_generar_etiquetas_valores_correctos():
+    """
+    Test actualizado a la NUEVA LÓGICA:
+    - Salto si diferencia > 500mV
+    - Ausencia si diferencia tiempo > 120s
+    """
     detector = DetectorIncidencias()
 
     df = pd.DataFrame({
-        'voltageReceiver1': [10, 1700, 3000],
-        'voltageReceiver2': [100, 100, 100],
+        # Caso 0: Inicio (Normal)
+        # Caso 1: Salto brusco de voltaje (1000 -> 1600 = 600mV dif) -> SaltoVoltaje
+        # Caso 2: Pasan 5 minutos (10:01 -> 10:06) -> AusenciaDatos
+        'tiempo': [
+            '01/01/2025 10:00:00',
+            '01/01/2025 10:01:00',
+            '01/01/2025 10:06:00'
+        ],
+        'voltageReceiver1': [1000, 1600, 1600],
+        'voltageReceiver2': [1000, 1000, 1000],
         'status': [0, 0, 0]
     })
 
     df_et = detector._generar_etiquetas(df)
 
-    assert df_et.iloc[0]['target'] == 'AusenciaDatos'
-    assert df_et.iloc[1]['target'] == 'Normal'
-    assert df_et.iloc[2]['target'] == 'SaltoVoltaje'
+    # Verificamos las etiquetas generadas
+    etiquetas = df_et['target'].values
+
+    # El primero siempre es normal (no hay anterior con quien comparar)
+    assert etiquetas[0] == 'Normal'
+    # El segundo tiene un salto de 600mV (>500)
+    assert etiquetas[1] == 'SaltoVoltaje'
+    # El tercero ha tardado 5 minutos (>120s)
+    assert etiquetas[2] == 'AusenciaDatos'
 
 
 def test_entrenamiento_cambia_estado_entrenado():
@@ -101,17 +123,19 @@ def test_entrenamiento_cambia_estado_entrenado():
 def test_ejecutar_analisis_sin_entrenar():
     detector = DetectorIncidencias()
 
-    df = pd.DataFrame({
-        'voltageReceiver1': [100],
-        'voltageReceiver2': [100],
-        'status': [0],
-        'tiempo': [1]
-    })
+    # Datos de prueba (con tiempo para que no falle antes de llegar a la comprobación)
+    datos_json = {
+        'voltageReceiver1': 100,
+        'voltageReceiver2': 100,
+        'status': 0,
+        'tiempo': '01/01/2025 10:00:00'
+    }
 
-    resultado = detector.ejecutar_analisis(df)
+    # Nota: Usamos analizar_dato_api que es el método que usa el servidor
+    resultado = detector.analizar_dato_api(datos_json)
 
-    assert resultado is None
-
+    # CORRECCIÓN: Ahora devuelve un mensaje, no None
+    assert resultado == "Servidor No Entrenado"
 
 # ======================================================
 # 3. TESTS DEL PATRÓN OBSERVER
