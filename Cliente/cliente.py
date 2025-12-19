@@ -83,7 +83,7 @@ def main():
             respuesta = requests.post(url, json=payload)
             diagnostico = respuesta.json().get('diagnostico')
 
-            print(f"Enviado: {payload['voltageReceiver1']}V | Diagnóstico Servidor: {diagnostico}")
+            print(f"Enviado: {payload['voltageReceiver1']}mV | Diagnóstico Servidor: {diagnostico}")
 
             # Guardar para el gráfico
             gui.Voltajes.append(row['voltageReceiver1'])

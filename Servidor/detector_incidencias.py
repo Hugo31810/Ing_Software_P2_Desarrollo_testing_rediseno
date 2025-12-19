@@ -18,7 +18,9 @@ class DetectorIncidencias:
         """
         condiciones = [
             (df['voltageReceiver1'] < 50),  # Regla: Voltaje muy bajo = Ausencia
-            (df['voltageReceiver1'] > 2000)  # Regla: Voltaje muy alto = Salto
+            (df['voltageReceiver1'] > 2000),  # Regla: Voltaje muy alto = Salto
+            #(df['voltageReceiver2'] < 50),
+            #(df['voltageReceiver2'] > 2000)
         ]
         etiquetas = ['AusenciaDatos', 'SaltoVoltaje']
 
@@ -58,6 +60,7 @@ class DetectorIncidencias:
         # Convertimos a arrays para acceso rápido
         tiempos = df_nuevos['tiempo'].values
         v1 = df_nuevos['voltageReceiver1'].values
+        #v2 = df_nuevos['voltageReceiver2'].values
 
         print(f"--> [Desarrollo] Analizando {len(df_nuevos)} registros en tiempo real...")
 
@@ -68,7 +71,8 @@ class DetectorIncidencias:
                 incidencia = {
                     'tipo': pred,
                     'hora': tiempos[i],
-                    'v1': v1[i]
+                    'v1': v1[i],
+                    #'v2': v2[i]
                 }
                 self.notificador.notifySuscribers(incidencia)
 
